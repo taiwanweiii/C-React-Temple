@@ -1,0 +1,26 @@
+# ==========================
+# React 前端 (Client)
+# ==========================
+Client/node_modules/
+Client/build/
+Client/.env
+Client/.DS_Store
+
+# ==========================
+# C# 後端 (Server)
+# ==========================
+Server/bin/
+Server/obj/
+Server/*.user
+Server/*.vs/
+Server/*.vscode/
+Server/*.DS_Store
+
+# ==========================
+# 全局設定
+# ==========================
+*.log
+*.tmp
+*.swp
+.DS_Store
+.vscode/
