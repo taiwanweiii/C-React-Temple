@@ -8,10 +8,10 @@ namespace Server.Controllers
 {
     [ApiController]               // ✅ 標記 Controller
     [Route("api/[controller]")]   // ✅ 設定路由
-    public class HelloController : ControllerBase
+    public class Test : ControllerBase
     {
-        [HttpGet("[action]")]     // ✅ 對應 GET /api/hello/greet
 
-        public IActionResult Greet() => Ok(new { message = "Hello World" });
+        [HttpGet("[action]")]     // ✅ 對應 GET /api/User/greet
+        public IActionResult T() => Ok(new { message = "Hello World" });
     }
 }

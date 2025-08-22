@@ -1,4 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,6 +15,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("My API")
+            .WithSidebar(true)
+            .WithDarkMode(true);
+    });
 }
 
 // app.UseHttpsRedirection();
@@ -23,7 +32,8 @@ app.MapGet("/", async context =>
             <head><title>API Test</title></head>
             <body>
                 <h1>API is running!</h1>
-                <p>可以測試其他 API，例如 <a href='/api/hello/greet'>Hello API</a></p>
+                <p>可以測試其他 API，例如 <a href='/openapi/v1.json'>OPENAPI</a></p>
+                <div>UI介面API:<a href='/scalar/'>Scral</a></div>
             </body>
         </html>
     ");
