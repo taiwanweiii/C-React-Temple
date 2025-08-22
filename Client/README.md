@@ -19,3 +19,4 @@ npm run dev
 ## 套件使用
 
 -   tailwindcss
+-   lucide-react
