@@ -30,11 +30,12 @@ namespace Server.Controllers
         [HttpPost()]
         [EndpointSummary("使用者註冊")]
         [EndpointDescription(@"
-        *參數涵蓋(data)
-        1.Name:使用者姓名
-        2.Email:信箱
-        3.Password:使用者姓名
-        4.ConfirmPassword:確認密碼
+        * 參數涵蓋(data)
+        1. Name:使用者姓名
+        2. Email:信箱
+        3. Password:使用者姓名
+        4. ConfirmPassword:確認密碼
+        回傳 status 'success:成功' 'error:失敗'
         ")]
         // [EndpointGroupName("user")]
         #endregion
@@ -70,11 +71,16 @@ namespace Server.Controllers
                 Password_hash = hashedPassword,
             };
             _users.Add(newUser);
-var names = _users.Select(u => u.Name).ToList();
-
+            var names = _users.Select(u => u.Name).ToList();
             // 6️⃣ 回傳結果
-            return Ok(new { message = "註冊成功", userId = newUser.User_id, name = newUser.Name, newUser });
-
+            return Ok(new
+            {
+                status = "success",
+                message = "註冊成功",
+                userId = newUser.User_id,
+                name = newUser.Name,
+                newUser
+            });
         }
     }
 }
