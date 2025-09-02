@@ -1,9 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-
+//Scalar套件:Ui openapi
 using Scalar.AspNetCore;
+using MySql.Data.MySqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
-
+string connStr = builder.Configuration.GetConnectionString("MySqlDb") ?? throw new InvalidOperationException("❌ 缺少 MySqlDb 連線字串！");
+Console.WriteLine($"連線字串: {connStr}");
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
