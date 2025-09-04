@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './Pages/Home';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
+import Test from './Pages/Test';
 
 import './App.css';
 
@@ -16,7 +17,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/Login" element={<Login />} />
                     <Route path="/Resgister" element={<Register />} />
-
+                    <Route path="/test" element={<Test />}></Route>
                     {/* <Route path="/about" element={<About />} /> */}
                     {/* 其他未匹配到的路由 */}
                     {/* <Route path="*" element={<NotFound />} /> */}
