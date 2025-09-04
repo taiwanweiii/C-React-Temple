@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './Pages/Home';
-import Login from './Pages/Login';
-import Register from './Pages/Register';
-import Test from './Pages/Test';
+import Home from '@Pages/Home';
+import Login from '@Pages/Login';
+import Register from '@Pages/Register';
+import Line from '@Pages/Line';
+
+import Test from '@Pages/Test';
 
 import './App.css';
 
@@ -16,7 +18,8 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/Login" element={<Login />} />
-                    <Route path="/Resgister" element={<Register />} />
+                    <Route path="/Register" element={<Register />} />
+                    <Route path="/line" element={<Line />} />
                     <Route path="/test" element={<Test />}></Route>
                     {/* <Route path="/about" element={<About />} /> */}
                     {/* 其他未匹配到的路由 */}

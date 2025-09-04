@@ -20,3 +20,5 @@ npm run dev
 
 -   tailwindcss
 -   lucide-react
+-   react-use
+-   react-liff
