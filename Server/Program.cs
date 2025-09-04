@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using Scalar.AspNetCore;
+using MySql.Data.MySqlClient;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 // 註冊 Controller 支援
 builder.Services.AddControllers();
+builder.Services.AddScoped<LineBotServices>();
+builder.Services.AddSingleton<SqlDbService>();
 
+//註冊Dbcontext
+// builder.Services.AddDbContext
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Dto = Server.Model.Dto;  // 取別名 Dto
-using Entities = Server.Model.Entities;  // 取別名 Dto
+using Entities = Server.Model.Entities;  // 取別名 Entities
 using BCrypt.Net; // 先用 NuGet 安裝 BCrypt.Net-Next
 
 namespace Server.Controllers
