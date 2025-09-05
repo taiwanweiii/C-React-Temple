@@ -70,5 +70,11 @@ namespace Server.Controllers
             }
             return Ok(results);
         }
+
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok("Test successful");
+        }
     }
 }

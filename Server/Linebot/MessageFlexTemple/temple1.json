@@ -1,0 +1,53 @@
+{
+    "type": "bubble",
+    "hero": {
+        "type": "image",
+        "url": "https://www.wei-mei.com.tw/clothfile/VS519.jpg",
+        "size": "full",
+        "aspectRatio": "20:13",
+        "aspectMode": "cover",
+        "action": {
+            "type": "uri",
+            "uri": "https://www.wei-mei.com.tw/clothfile/VS519.jpg"
+        }
+    },
+    "body": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "md",
+        "action": {
+            "type": "uri",
+            "uri": "https://line.me/"
+        },
+        "contents": [
+            {
+                "type": "text",
+                "text": "🔎 查詢項目:",
+                "size": "xl",
+                "weight": "bold",
+                "maxLines": 0,
+                "adjustMode": "shrink-to-fit"
+            },
+            {
+                "type": "text",
+                "text": "捲簾",
+                "size": "xl",
+                "weight": "bold"
+            },
+            {
+                "type": "text",
+                "text": "庫存數量 : 充足",
+                "margin": "sm",
+                "flex": 0,
+                "color": "#06C755"
+            },
+            {
+                "type": "text",
+                "text": "最後查詢時間:20250708 13:00",
+                "wrap": true,
+                "color": "#aaaaaa",
+                "size": "xxs"
+            }
+        ]
+    }
+}
