@@ -12,6 +12,9 @@ builder.Services.AddOpenApi();
 // 註冊 Controller 支援
 builder.Services.AddControllers();
 
+//註冊lineBot服務
+builder.Services.AddTransient<Server.Services.LineBotServices>();
+
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

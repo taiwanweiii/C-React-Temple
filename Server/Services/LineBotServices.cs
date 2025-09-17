@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 
 namespace Server.Services
 {
-    [ApiController]
-    [Route("api/linebot")]
-    public class LineBotServices : ControllerBase
+    // [ApiController]
+    // [Route("api/linebot")]
+    public class LineBotServices
     {
         private readonly string _channelAccessToken;
         private readonly string _channelSecret;
@@ -20,25 +20,23 @@ namespace Server.Services
             // 初始化 Bot
             _bot = new Bot(_channelAccessToken);
         }
-        // 取得 Bot 實例
-        public Bot GetBot()
-        {
-            return _bot;
-        }
-        [HttpPost("reply")]
-        public async Task<IActionResult> ReplyMessage()
-        {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        public Bot Bot => _bot;
 
-            var json = await reader.ReadToEndAsync();
+        // [HttpPost("reply")]
+        public async Task<Dictionary<string, string>> ReplyMessage(StreamReader req)
+        {
+            // using var reader = new StreamReader(Request.Body, Encoding.UTF8);
 
-            // 將 JSON 轉成物件
-            var receivedMessage = JsonConvert.DeserializeObject<ReceivedMessage>(json);
-            Console.WriteLine("收到LINE訊息：" + JsonConvert.SerializeObject(receivedMessage));
-            if (receivedMessage?.events != null)
+            // var json = await reader.ReadToEndAsync();
+            if (req is StreamReader reader)
             {
-                foreach (var ev in receivedMessage.events)
+                var json = await req.ReadToEndAsync();
+                // Console.WriteLine(json);
+                var receivedMessage = JsonConvert.DeserializeObject<ReceivedMessage>(json);
+                // Console.WriteLine("收到LINE訊息：" + JsonConvert.SerializeObject(receivedMessage));
+                if (receivedMessage?.events != null && receivedMessage.events.Any())
                 {
+                    var ev = receivedMessage.events[0];
                     //回覆Token
                     string replyToken = ev.replyToken;
 
@@ -46,13 +44,32 @@ namespace Server.Services
                     if (ev.message?.text != null)
                     {
                         // 只在終端打印，不回覆
-                        Console.WriteLine($"收到訊息: {ev.message.text}");
-                        _bot.ReplyMessage(replyToken, $"你說的是: {ev.message.text}");
+                        // Console.WriteLine($"收到訊息: {ev.message.text}");
+
+                        // Line 回覆訊息
+                        // _bot.ReplyMessage(replyToken, $"你說的是: {ev.message.text}");
                     }
+                    return new Dictionary<string, string>  {
+                        {"status","scuess"},
+                        { "replyToken", replyToken },
+                        { "message", ev.message?.text ?? ""},
+                        { "messageType", ev.message?.type ?? ""},
+                        { "userId", ev.source.userId ?? "" },
+
+                        { "type", ev.type ?? "" },
+                        {"timestamp", ev.timestamp.ToString() }
+                    };
                 }
             }
-
-            return Ok();
+            else
+            {
+                throw new InvalidOperationException("❌ 無法讀取請求內容！");
+            }
+            return new Dictionary<string, string>
+        {
+            {"status","fail"},
+            {"message", "無法處理請求"}
+        };
         }
         // [HttpPost]
         // public IActionResult ReplyMessage()
