@@ -17,9 +17,37 @@ Console.WriteLine($"連線字串: {connStr}");
 builder.Services.AddOpenApi();
 // 註冊 Controller 支援
 builder.Services.AddControllers();
+
+
+// --- AutoDetect + Retry 機制 ---
+MySqlServerVersion? serverVersion = null;
+int retryCount = 10;              // 最多重試 10 次
+int retryDelaySeconds = 5;        // 每次等待 5 秒
+
+while (retryCount > 0)
+{
+    try
+    {
+        var detected = ServerVersion.AutoDetect(connStr);
+        serverVersion = new MySqlServerVersion(detected.Version);
+        Console.WriteLine($"✅ DB 版本偵測成功: {serverVersion}");
+        break;
+    }
+    catch
+    {
+        retryCount--;
+        Console.WriteLine($"⚠️ DB 尚未啟動，{retryCount} 次重試後失敗。等待 {retryDelaySeconds}s...");
+        Thread.Sleep(retryDelaySeconds * 1000);
+    }
+}
+
+if (serverVersion == null)
+    throw new Exception("❌ 無法連線到資料庫，啟動失敗");
 // 注入DbContext
 builder.Services.AddDbContext<Server.Model.data.AppDbContext>(options =>
-    options.UseMySql(connStr, ServerVersion.AutoDetect(connStr))
+    options.UseMySql(connStr, ServerVersion.AutoDetect(connStr),
+        mySqlOptions => mySqlOptions.EnableRetryOnFailure()
+    )
 );
 //啟動Session
 builder.Services.AddDistributedMemoryCache();
