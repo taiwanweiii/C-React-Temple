@@ -1,55 +1,56 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowRight, Palette, X, User, Mail, Lock, Check } from 'lucide-react';
+import { PhoneCall, Cake, Eye, EyeOff, ArrowRight, User, Mail, Lock, Check } from 'lucide-react';
+import { useApi } from "@hook/useApi";
 
-// 型別定義
-interface ColorPreset {
-    name: string;
-    color: string;
-}
+//function 
+import ColorPickerIndex from '@pages/ColorPicker';
+import useColorPicker from '@hook/useColorPicker';
+
+//components
+import Sweetalert from '@components/sweetalert2';
+
+import type { ApiResponseRegister } from '@type/api';
 
 interface RegisterFormData {
-    fullName: string;
+    username: string;
     email: string;
     password: string;
     confirmPassword: string;
+    birthday: string;
+    phone: string;
+    gender: string
 }
 
-type FocusedField = 'fullName' | 'email' | 'password' | 'confirmPassword' | '';
+type FocusedField = 'username' | 'email' | 'password' | 'confirmPassword' | 'birthday' | 'phone' | 'gender' | '';
 
 interface PasswordRequirement {
     text: string;
     met: boolean;
 }
 
+
+
 const Resgister: React.FC = () => {
+    const { callApi } = useApi<ApiResponseRegister>();
+
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
     const [formData, setFormData] = useState<RegisterFormData>({
-        fullName: '',
+        username: '',
         email: '',
         password: '',
         confirmPassword: '',
+        birthday: '',
+        phone: '',
+        gender: ''
     });
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, _setIsLoading] = useState<boolean>(false);
     const [focusedField, setFocusedField] = useState<FocusedField>('');
-    const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
     const [agreeTerms, setAgreeTerms] = useState<boolean>(false);
     const [agreeMarketing, setAgreeMarketing] = useState<boolean>(false);
 
     // 動態顏色設定 - 預設為 Facebook 藍
-    const [primaryColor, setPrimaryColor] = useState<string>('#1877f2');
-
-    // 預設顏色選項
-    const colorPresets: ColorPreset[] = [
-        { name: 'Facebook 藍', color: '#1877f2' },
-        { name: '商務藍', color: '#2563eb' },
-        { name: '深藍', color: '#1e40af' },
-        { name: '紫色', color: '#7c3aed' },
-        { name: '綠色', color: '#059669' },
-        { name: '橘色', color: '#ea580c' },
-        { name: '紅色', color: '#dc2626' },
-        { name: '深灰', color: '#374151' },
-    ];
+    const primaryColor = useColorPicker(state => state.primaryColor);
 
     // 密碼強度檢查
     const getPasswordRequirements = (): PasswordRequirement[] => [
@@ -66,34 +67,45 @@ const Resgister: React.FC = () => {
     const allRequirementsMet = passwordRequirements.every((req) => req.met);
 
     const handleSubmit = async (): Promise<void> => {
+
         if (!agreeTerms) {
-            alert('請同意服務條款和隱私政策');
+            Sweetalert.showWarning('請同意服務條款和隱私政策');
             return;
         }
 
         if (!allRequirementsMet) {
-            alert('請確保密碼符合所有要求');
+            Sweetalert.showWarning('請確保密碼符合所有要求');
             return;
         }
 
         if (!passwordsMatch) {
-            alert('密碼確認不一致');
+            Sweetalert.showWarning('密碼確認不一致');
             return;
         }
 
-        setIsLoading(true);
+        // setIsLoading(true);
+        try {
+            const result = await callApi('/api/user/Register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            if (result.status === 'success') {
+                await Sweetalert.showSuccess(result.message || '註冊成功，請登入');
+                window.location.href = '/';
 
-        // 模擬註冊過程
-        setTimeout(() => {
-            setIsLoading(false);
-            alert('註冊成功！歡迎加入！');
-        }, 2000);
+            } else if (result.status === 'fail') {
+                Sweetalert.showWarning(result.message || '註冊失敗，請稍後再試');
+
+            } else {
+                Sweetalert.showWarning('後端傳送有問題，請稍後再試');
+            }
+
+        } catch (err) {
+            Sweetalert.showError(err, 'src/Pages/Register/index.tsx');
+        }
     };
 
-    const handleColorChange = (color: string): void => {
-        setPrimaryColor(color);
-        setShowColorPicker(false);
-    };
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement>,
@@ -113,28 +125,11 @@ const Resgister: React.FC = () => {
         setFocusedField('');
     };
 
-    // 動態生成樣式
-    const getDynamicStyle = (): React.CSSProperties =>
-        ({
-            '--primary-color': primaryColor,
-            '--primary-hover': adjustBrightness(primaryColor, -10),
-            '--primary-light': adjustBrightness(primaryColor, 90),
-        } as React.CSSProperties);
-
-    // 調整顏色亮度
-    const adjustBrightness = (color: string, amount: number): string => {
-        const num = parseInt(color.replace('#', ''), 16);
-        const r = Math.max(0, Math.min(255, (num >> 16) + amount));
-        const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + amount));
-        const b = Math.max(0, Math.min(255, (num & 0x0000ff) + amount));
-        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-    };
-
     const getInputStyle = (field: FocusedField): React.CSSProperties =>
-        ({
-            borderColor: focusedField === field ? primaryColor : undefined,
-            '--tw-ring-color': primaryColor,
-        } as React.CSSProperties);
+    ({
+        borderColor: focusedField === field ? primaryColor : undefined,
+        '--tw-ring-color': primaryColor,
+    } as React.CSSProperties);
 
     const getPrimaryColorStyle = (): React.CSSProperties => ({
         color: primaryColor,
@@ -146,91 +141,11 @@ const Resgister: React.FC = () => {
 
     return (
         <div
-            className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
-            style={getDynamicStyle()}
+            className="min-h-screen bg-gray-50 flex items-center justify-center p-6 "
         >
-            {/* 顏色選擇器浮層 */}
-            {showColorPicker && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900">選擇主題色彩</h3>
-                            <button
-                                onClick={() => setShowColorPicker(false)}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                                aria-label="關閉顏色選擇器"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* 顏色預設選項 */}
-                        <div className="grid grid-cols-4 gap-3 mb-6">
-                            {colorPresets.map((preset: ColorPreset) => (
-                                <button
-                                    key={preset.name}
-                                    onClick={() => handleColorChange(preset.color)}
-                                    className="group flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                                    aria-label={`選擇 ${preset.name}`}
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-full mb-2 shadow-md group-hover:scale-110 transition-transform"
-                                        style={{ backgroundColor: preset.color }}
-                                    />
-                                    <span className="text-xs text-gray-600">{preset.name}</span>
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* 自訂顏色選擇器 */}
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">
-                                自訂顏色
-                            </label>
-                            <div className="flex items-center space-x-3">
-                                <input
-                                    type="color"
-                                    value={primaryColor}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                        setPrimaryColor(e.target.value)
-                                    }
-                                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
-                                    aria-label="選擇自訂顏色"
-                                />
-                                <input
-                                    type="text"
-                                    value={primaryColor}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                        setPrimaryColor(e.target.value)
-                                    }
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
-                                    placeholder="#1877f2"
-                                    pattern="^#[0-9A-Fa-f]{6}$"
-                                    aria-label="輸入顏色代碼"
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setShowColorPicker(false)}
-                            className="w-full mt-6 py-2 px-4 rounded-lg text-white font-medium transition-colors"
-                            style={getPrimaryBackgroundStyle()}
-                        >
-                            確認選擇
-                        </button>
-                    </div>
-                </div>
-            )}
-
             <div className="w-full max-w-md relative">
                 {/* 顏色設定按鈕 */}
-                <button
-                    onClick={() => setShowColorPicker(true)}
-                    className="absolute -top-2 -right-2 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center text-gray-600 hover:text-gray-800 z-10"
-                    aria-label="開啟顏色設定"
-                >
-                    <Palette className="w-5 h-5" />
-                </button>
+                <ColorPickerIndex />
 
                 {/* Logo 和標題區域 */}
                 <div className="text-center mb-10">
@@ -248,68 +163,36 @@ const Resgister: React.FC = () => {
 
                 {/* 註冊表單 */}
                 <div className="space-y-5">
-                    {/* 姓名輸入 */}
+                    {/* 帳號輸入 */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700" htmlFor="fullName">
-                            全名
+                        <label className="text-sm font-medium text-gray-700" htmlFor="username">
+                            帳號輸入
                         </label>
                         <div className="relative">
                             <User
-                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${
-                                    focusedField === 'fullName' ? 'text-gray-600' : 'text-gray-400'
-                                }`}
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'username' ? 'text-gray-600' : 'text-gray-400'
+                                    }`}
                             />
                             <input
-                                id="fullName"
+                                id="username"
                                 type="text"
-                                value={formData.fullName}
-                                onChange={(e) => handleInputChange(e, 'fullName')}
-                                onFocus={() => handleFocus('fullName')}
+                                value={formData.username}
+                                onChange={(e) => handleInputChange(e, 'username')}
+                                onFocus={() => handleFocus('username')}
                                 onBlur={handleBlur}
-                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'fullName'
+                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none 
+                                    ${focusedField === 'username'
                                         ? 'ring-1'
                                         : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                style={getInputStyle('fullName')}
-                                placeholder="請輸入您的全名"
+                                    }
+                                    `}
+                                style={getInputStyle('username')}
+                                placeholder="請輸入帳號"
                                 required
-                                autoComplete="name"
+                                autoComplete="username"
                             />
                         </div>
                     </div>
-
-                    {/* 電子郵件輸入 */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700" htmlFor="email">
-                            電子郵件
-                        </label>
-                        <div className="relative">
-                            <Mail
-                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${
-                                    focusedField === 'email' ? 'text-gray-600' : 'text-gray-400'
-                                }`}
-                            />
-                            <input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => handleInputChange(e, 'email')}
-                                onFocus={() => handleFocus('email')}
-                                onBlur={handleBlur}
-                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'email'
-                                        ? 'ring-1'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                style={getInputStyle('email')}
-                                placeholder="name@company.com"
-                                required
-                                autoComplete="email"
-                            />
-                        </div>
-                    </div>
-
                     {/* 密碼輸入 */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700" htmlFor="password">
@@ -317,9 +200,8 @@ const Resgister: React.FC = () => {
                         </label>
                         <div className="relative">
                             <Lock
-                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${
-                                    focusedField === 'password' ? 'text-gray-600' : 'text-gray-400'
-                                }`}
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'password' ? 'text-gray-600' : 'text-gray-400'
+                                    }`}
                             />
                             <input
                                 id="password"
@@ -328,11 +210,10 @@ const Resgister: React.FC = () => {
                                 onChange={(e) => handleInputChange(e, 'password')}
                                 onFocus={() => handleFocus('password')}
                                 onBlur={handleBlur}
-                                className={`w-full pl-10 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'password'
-                                        ? 'ring-1'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                className={`w-full h-10 pl-10 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'password'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
                                 style={getInputStyle('password')}
                                 placeholder="建立安全密碼"
                                 required
@@ -359,14 +240,12 @@ const Resgister: React.FC = () => {
                                     {passwordRequirements.map((requirement, index) => (
                                         <div
                                             key={index}
-                                            className={`flex items-center space-x-1 ${
-                                                requirement.met ? 'text-green-600' : 'text-gray-400'
-                                            }`}
+                                            className={`flex items-center space-x-1 ${requirement.met ? 'text-green-600' : 'text-gray-400'
+                                                }`}
                                         >
                                             <Check
-                                                className={`w-3 h-3 ${
-                                                    requirement.met ? 'opacity-100' : 'opacity-30'
-                                                }`}
+                                                className={`w-3 h-3 ${requirement.met ? 'opacity-100' : 'opacity-30'
+                                                    }`}
                                             />
                                             <span>{requirement.text}</span>
                                         </div>
@@ -386,11 +265,10 @@ const Resgister: React.FC = () => {
                         </label>
                         <div className="relative">
                             <Lock
-                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${
-                                    focusedField === 'confirmPassword'
-                                        ? 'text-gray-600'
-                                        : 'text-gray-400'
-                                }`}
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'confirmPassword'
+                                    ? 'text-gray-600'
+                                    : 'text-gray-400'
+                                    }`}
                             />
                             <input
                                 id="confirmPassword"
@@ -399,15 +277,14 @@ const Resgister: React.FC = () => {
                                 onChange={(e) => handleInputChange(e, 'confirmPassword')}
                                 onFocus={() => handleFocus('confirmPassword')}
                                 onBlur={handleBlur}
-                                className={`w-full pl-10 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'confirmPassword'
-                                        ? 'ring-1'
-                                        : formData.confirmPassword && !passwordsMatch
+                                className={`w-full h-10 pl-10 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'confirmPassword'
+                                    ? 'ring-1'
+                                    : formData.confirmPassword && !passwordsMatch
                                         ? 'border-red-300 ring-1 ring-red-300'
                                         : formData.confirmPassword && passwordsMatch
-                                        ? 'border-green-300 ring-1 ring-green-300'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                            ? 'border-green-300 ring-1 ring-green-300'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                    }`}
                                 style={
                                     focusedField === 'confirmPassword'
                                         ? getInputStyle('confirmPassword')
@@ -434,20 +311,138 @@ const Resgister: React.FC = () => {
                         {/* 密碼匹配指示 */}
                         {formData.confirmPassword && (
                             <div
-                                className={`flex items-center space-x-1 text-xs ${
-                                    passwordsMatch ? 'text-green-600' : 'text-red-600'
-                                }`}
+                                className={`flex items-center space-x-1 text-xs ${passwordsMatch ? 'text-green-600' : 'text-red-600'
+                                    }`}
                             >
                                 <Check
-                                    className={`w-3 h-3 ${
-                                        passwordsMatch ? 'opacity-100' : 'opacity-30'
-                                    }`}
+                                    className={`w-3 h-3 ${passwordsMatch ? 'opacity-100' : 'opacity-30'
+                                        }`}
                                 />
                                 <span>{passwordsMatch ? '密碼匹配' : '密碼不匹配'}</span>
                             </div>
                         )}
                     </div>
+                    {/* 電子郵件輸入 */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                            電子郵件
+                        </label>
+                        <div className="relative">
+                            <Mail
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'email' ? 'text-gray-600' : 'text-gray-400'
+                                    }`}
+                            />
+                            <input
+                                id="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => handleInputChange(e, 'email')}
+                                onFocus={() => handleFocus('email')}
+                                onBlur={handleBlur}
+                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'email'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                style={getInputStyle('email')}
+                                placeholder="name@company.com"
+                                required
+                                autoComplete="email"
+                            />
+                        </div>
+                    </div>
+                    {/* 生日輸入 */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700" htmlFor="birthday">
+                            生日
+                        </label>
+                        <div className="relative">
+                            <Cake
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'birthday' ? 'text-gray-600' : 'text-gray-400'
+                                    }`}
+                            />
+                            <input
+                                id="username"
+                                type="date"
+                                value={formData.birthday}
+                                onChange={(e) => handleInputChange(e, 'birthday')}
+                                onFocus={() => handleFocus('birthday')}
+                                onBlur={handleBlur}
+                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'birthday'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                style={getInputStyle('birthday')}
+                                placeholder="請輸入生日"
+                                required
+                                autoComplete="birthday"
+                            />
+                        </div>
+                    </div>
+                    {/* 電話輸入 */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700" htmlFor="birthday">
+                            電話
+                        </label>
+                        <div className="relative">
+                            <PhoneCall
+                                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-200 ${focusedField === 'username' ? 'text-gray-600' : 'text-gray-400'
+                                    }`}
+                            />
+                            <input
+                                id="phone"
+                                type="text"
+                                value={formData.phone}
+                                onChange={(e) => handleInputChange(e, 'phone')}
+                                onFocus={() => handleFocus('phone')}
+                                onBlur={handleBlur}
+                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'phone'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                style={getInputStyle('phone')}
+                                placeholder="請輸入電話(0932523116)"
+                                required
+                                autoComplete="phone"
+                            />
+                        </div>
+                    </div>
+                    {/* 性別輸入 */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">性別</label>
+                        <div className="flex items-center space-x-6">
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="gender"
+                                    value="男"
+                                    checked={formData.gender === "男"}
+                                    onChange={(e) => handleInputChange(e, "gender")}
+                                    style={{
+                                        accentColor: primaryColor,
+                                        '--tw-ring-color': primaryColor,
+                                    } as React.CSSProperties}
+                                    className="w-4 h-4 border-gray-300 "
+                                />
+                                <span>男</span>
+                            </label>
 
+                            <label className="flex items-center space-x-2 cursor-pointer ">
+                                <input
+                                    type="radio"
+                                    name="gender"
+                                    value="女"
+                                    checked={formData.gender === "女"}
+                                    onChange={(e) => handleInputChange(e, "gender")}
+                                    style={{
+                                        accentColor: primaryColor, // 這行才會真正影響 radio 勾選顏色
+                                        '--tw-ring-color': primaryColor,
+                                    } as React.CSSProperties}
+                                    className="w-4 h-4  border-gray-300"
+                                />
+                                <span>女</span>
+                            </label>
+                        </div>
+                    </div>
                     {/* 同意條款 */}
                     <div className="space-y-3 pt-2">
                         <label className="flex items-start text-sm text-gray-600 cursor-pointer">
@@ -504,21 +499,21 @@ const Resgister: React.FC = () => {
                     {/* 註冊按鈕 */}
                     <button
                         onClick={handleSubmit}
-                        disabled={
-                            isLoading || !agreeTerms || !allRequirementsMet || !passwordsMatch
-                        }
+                        // disabled={
+                        //     isLoading || !agreeTerms || !allRequirementsMet || !passwordsMatch
+                        // }
                         className="w-full text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                         style={getPrimaryBackgroundStyle()}
                         aria-label={isLoading ? '註冊中...' : '建立帳戶'}
                     >
-                        {isLoading ? (
+                        {/* {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                            <>
-                                <span>建立帳戶</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </>
-                        )}
+                            <> */}
+                        <span>{isLoading ? '註冊中...' : '建立帳戶'}</span>
+                        <ArrowRight className="w-4 h-4" />
+                        {/* </>
+                        )} */}
                     </button>
                 </div>
 

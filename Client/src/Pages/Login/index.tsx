@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Palette, X } from 'lucide-react';
+
+import { useApi } from "@hook/useApi";
+import type { ApiResponseRegister } from "@type/api";
+
+//components
+import Sweetalert from '@components/sweetalert2';
+
+//redux
+import { useAppDispatch, useAppSelector } from '@hook/useStore';
+import { setUser } from "@store/Auth/user";
+
 // 型別定義
 interface ColorPreset {
     name: string;
@@ -7,15 +18,22 @@ interface ColorPreset {
 }
 
 interface LoginFormData {
-    email: string;
+    address: string;
     password: string;
 }
-
-type FocusedField = 'email' | 'password' | '';
+const unused: LoginFormData | null = null;
+void unused;
+type FocusedField = 'address' | 'password' | '';
 
 export default () => {
+    const currentUser = useAppSelector((state) => state.user.session);
+    console.log(currentUser);
+
+    const { callApi } = useApi<ApiResponseRegister>();
+    const dispatch = useAppDispatch();
+
     const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [email, setEmail] = useState<string>('');
+    const [address, setAddress] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [focusedField, setFocusedField] = useState<FocusedField>('');
@@ -38,12 +56,39 @@ export default () => {
 
     const handleSubmit = async (): Promise<void> => {
         setIsLoading(true);
+        try {
+            const result = await callApi('/user/login',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, password }),
+                }
+            )
+            if (result.status === 'success') {
+                dispatch(setUser({
+                    username: result.data.username,
+                    role: result.data.role,
+                }));
+                console.log(result.data);
+                await Sweetalert.showSuccess(result.message || '登入成功');
+                window.location.href = '/';
+            } else if (result.status === 'fail') {
+                dispatch(setUser({
+                    username: 'result.data.username',
+                    role: "admin",
+                }));
+                Sweetalert.showWarning(result.message || '登入失敗');
+            }
+        } catch (err) {
+            Sweetalert.showError(err, 'Login');
+        }
+        setIsLoading(false);
 
         // 模擬登入過程
-        setTimeout(() => {
-            setIsLoading(false);
-            alert('登入成功！');
-        }, 1500);
+        // setTimeout(() => {
+        //     setIsLoading(false);
+        //     alert('登入成功！');
+        // }, 1500);
     };
 
     const handleColorChange = (color: string): void => {
@@ -53,10 +98,10 @@ export default () => {
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement>,
-        field: 'email' | 'password'
+        field: 'address' | 'password'
     ): void => {
-        if (field === 'email') {
-            setEmail(e.target.value);
+        if (field === 'address') {
+            setAddress(e.target.value);
         } else {
             setPassword(e.target.value);
         }
@@ -72,11 +117,11 @@ export default () => {
 
     // 動態生成樣式
     const getDynamicStyle = (): React.CSSProperties =>
-        ({
-            '--primary-color': primaryColor,
-            '--primary-hover': adjustBrightness(primaryColor, -10),
-            '--primary-light': adjustBrightness(primaryColor, 90),
-        } as React.CSSProperties);
+    ({
+        '--primary-color': primaryColor,
+        '--primary-hover': adjustBrightness(primaryColor, -10),
+        '--primary-light': adjustBrightness(primaryColor, 90),
+    } as React.CSSProperties);
 
     // 調整顏色亮度
     const adjustBrightness = (color: string, amount: number): string => {
@@ -88,10 +133,10 @@ export default () => {
     };
 
     const getInputStyle = (field: FocusedField): React.CSSProperties =>
-        ({
-            borderColor: focusedField === field ? primaryColor : undefined,
-            '--tw-ring-color': primaryColor,
-        } as React.CSSProperties);
+    ({
+        borderColor: focusedField === field ? primaryColor : undefined,
+        '--tw-ring-color': primaryColor,
+    } as React.CSSProperties);
 
     const getPrimaryColorStyle = (): React.CSSProperties => ({
         color: primaryColor,
@@ -207,26 +252,25 @@ export default () => {
                 <div className="space-y-6">
                     {/* 電子郵件輸入 */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                        <label className="text-sm font-medium text-gray-700" htmlFor="address">
                             電子郵件
                         </label>
                         <div className="relative">
                             <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => handleInputChange(e, 'email')}
-                                onFocus={() => handleFocus('email')}
+                                id="address"
+                                type="text"
+                                value={address}
+                                onChange={(e) => handleInputChange(e, 'address')}
+                                onFocus={() => handleFocus('address')}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'email'
-                                        ? 'ring-1'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                style={getInputStyle('email')}
+                                className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'address'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                style={getInputStyle('address')}
                                 placeholder="name@company.com"
                                 required
-                                autoComplete="email"
+                                autoComplete="address"
                             />
                         </div>
                     </div>
@@ -244,11 +288,10 @@ export default () => {
                                 onChange={(e) => handleInputChange(e, 'password')}
                                 onFocus={() => handleFocus('password')}
                                 onBlur={handleBlur}
-                                className={`w-full px-4 py-3 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${
-                                    focusedField === 'password'
-                                        ? 'ring-1'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                className={`w-full px-4 py-3 pr-12 border rounded-lg text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none ${focusedField === 'password'
+                                    ? 'ring-1'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
                                 style={getInputStyle('password')}
                                 placeholder="請輸入密碼"
                                 required
@@ -296,7 +339,7 @@ export default () => {
                     {/* 登入按鈕 */}
                     <button
                         onClick={handleSubmit}
-                        disabled={isLoading}
+                        // disabled={isLoading}
                         className="w-full text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                         style={getPrimaryBackgroundStyle()}
                         aria-label={isLoading ? '登入中...' : '登入'}

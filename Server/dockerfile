@@ -1,0 +1,21 @@
+# Step 1: build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /app
+
+# 複製專案檔案並 restore
+COPY *.csproj ./
+RUN dotnet restore
+
+# 複製所有檔案並 publish
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# Step 2: runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# 如果是 React build 放在 wwwroot 已經在 publish
+# EXPOSE 5003
+ENTRYPOINT ["dotnet", "Server.dll"]

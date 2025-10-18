@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./Server
+    image: c-react-temple
+    ports:
+      - "5003:5003"   # 宿主機 5003 → 容器內 5003
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - mariaDB
+
+  mariaDB:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mariadb-data:/var/lib/mysql
+
+volumes:
+  mariadb-data:
