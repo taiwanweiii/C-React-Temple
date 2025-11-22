@@ -25,4 +25,14 @@ namespace Server.Model.Dto.User
         public required string Address { get; set; }
         public required string Password { get; set; }
     }
+
+    public class UpdateProfileDto
+    {
+        public string? Username { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? Role { get; set; }
+        public string? Gender { get; set; }
+        public string? Birthday { get; set; }
+    }
 }

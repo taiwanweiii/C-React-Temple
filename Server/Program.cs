@@ -128,13 +128,14 @@ app.UseStaticFiles();
 // React SPA router fallback
 app.MapFallbackToFile("index.html");
 
-// 映射 Controller
-app.MapControllers();
-//啟動session
-app.UseSession();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+//啟動session
+app.UseSession();
+// 映射 Controller
+app.MapControllers();
+
 // 設定監聽容器內 port，例如 5003
 
 app.Urls.Add("http://+:5003");

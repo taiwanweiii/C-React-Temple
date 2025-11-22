@@ -49,7 +49,7 @@ namespace Server.Controllers
         #endregion
         public IActionResult Register([FromBody] Dto.User.RegisterDto data)
         {
-            // Console.WriteLine($"收到註冊請求: {data}");
+            Console.WriteLine($"收到註冊請求: {data}");
             if (!ModelState.IsValid)
             {
                 return Ok(new Dto.ApiResponse<object>
@@ -103,6 +103,147 @@ namespace Server.Controllers
                 Message = "註冊成功",
                 Data = newUser
             });
+        }
+        #region API 說明
+        [HttpPost()]
+        [EndpointSummary("更新使用者資料")]
+        [EndpointDescription(@"
+        * 參數涵蓋(data)
+        1. Username:使用者姓名
+        2. Phone:電話
+        3. Email:信箱
+        4. Role:角色
+        5. Gender:性別
+        6. Birthday:生日
+        回傳 status 'success:成功' 'error:失敗'
+        ")]
+        // [EndpointGroupName("user")]
+        #endregion
+        public IActionResult UpdateProfile([FromBody] Dto.User.UpdateProfileDto data)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Ok(new Dto.ApiResponse<object>
+                {
+                    Status = "fail",
+                    Message = "資料格式錯誤",
+                    Data = ModelState
+                });
+            }
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+            {
+                return Unauthorized(new { Status = "fail", Message = "JWT 不存在" });
+            }
+            var jwtValidateValue = _jwtService.ValidateToken(jwt, out string? errorMessage);
+            if (jwtValidateValue == null)
+            {
+                return Unauthorized(new { Status = "fail", Message = errorMessage });
+            }
+            var userIdClaim = jwtValidateValue.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { Status = "fail", Message = "JWT 無效" });
+            }
+            int userId = int.Parse(userIdClaim);
+            var user = _dbcontext.User.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return Ok(new Dto.ApiResponse<object> { Status = "fail", Message = "此UserId 無使用者", Data = null });
+            }
+            else
+            {
+                // using var transaction = _dbcontext.Database.BeginTransaction(); // ✅ 開始交易
+                try
+                {
+                    // 直接把舊資料存進 UserUpdateLog
+                    var log = new Entities.UserUpdateLogDB
+                    {
+                        User_id = user.Id,
+                        Username = user.Username,
+                        Password = user.Password,
+                        Phone = user.Phone,
+                        Email = user.Email,
+                        Birthday = user.Birthday,
+                        Gender = user.Gender,
+                        Role = user.Role,
+                        Add_user_id = user.Id, // 可改成登入者帳號
+                        Pw = user.Pw
+                    };
+
+                    // _dbcontext.SaveChanges();
+                    bool isUpdated = false;
+
+                    // 更新使用者資料
+                    // 只更新有值且不同的欄位
+                    if (!string.IsNullOrEmpty(data.Username) && data.Username != user.Username)
+                    {
+                        user.Username = data.Username;
+                        isUpdated = true;
+                    }
+                    if (!string.IsNullOrEmpty(data.Phone) && data.Phone != user.Phone)
+                    {
+                        user.Phone = data.Phone;
+                        isUpdated = true;
+                    }
+
+                    if (!string.IsNullOrEmpty(data.Email) && data.Email != user.Email)
+                    {
+                        user.Email = data.Email;
+                        isUpdated = true;
+                    }
+                    if (!string.IsNullOrEmpty(data.Birthday))
+                    {
+                        if (DateTime.TryParse(data.Birthday, out var newBirthday))
+                        {
+                            if (user.Birthday != newBirthday)
+                            {
+                                user.Birthday = newBirthday;
+                                isUpdated = true;
+                            }
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(data.Gender) && data.Gender != user.Gender)
+                    {
+                        user.Gender = data.Gender;
+                        isUpdated = true;
+                    }
+
+                    if (!string.IsNullOrEmpty(data.Role) && data.Role != user.Role)
+                    {
+                        user.Role = data.Role;
+                        isUpdated = true;
+                    }
+                    // 寫入資料庫
+                    // ✅ 只有有變更才寫入資料庫
+                    if (isUpdated)
+                    {
+                        _dbcontext.UserUpdateLog.Add(log);
+                        _dbcontext.SaveChanges();
+                    }
+                    return Ok(new Dto.ApiResponse<object>
+                    {
+                        Status = "success",
+                        Message = "更新成功",
+                        Data = null
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return Ok(new Dto.ApiResponse<object>
+                    {
+                        Status = "fail",
+                        Message = $"更新失敗: {ex.Message}",
+                        Data = null
+                    });
+                }
+            }
+            // return Ok(new Dto.ApiResponse<object>
+            // {
+            //     Status = "success",
+            //     Message = "更新成功",
+            //     Data = null
+            // });
         }
 
         #region API 說明
@@ -276,7 +417,19 @@ namespace Server.Controllers
             if (user != null)
             {
                 Console.WriteLine(user.Pw);
-                return Ok(new { Status = "success", Data = new { user.Username, user.Role } });
+                return Ok(new
+                {
+                    Status = "success",
+                    Data = new
+                    {
+                        user.Username,
+                        user.Role,
+                        user.Birthday,
+                        user.Email,
+                        user.Phone,
+                        user.Gender
+                    }
+                });
 
             }
             return Ok(new { Status = "success", Data = new { userId } });
