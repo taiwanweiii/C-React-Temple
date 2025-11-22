@@ -7,7 +7,8 @@ services:
     ports:
       - "5003:5003"   # 宿主機 5003 → 容器內 5003
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=mariadb;Database=line_order;User=root;Password=1234;
     depends_on:
       - mariaDB
 
