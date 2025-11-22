@@ -23,6 +23,7 @@ export default function UserMenu({ setIsUserMenuOpen }: UserMenuProps) {
         });
         if (response && response.status === 'success') {
             window.location.href = "/"; // 登出成功後，重新導向到首頁
+            localStorage.removeItem('token');
         } else {
             alert("登出失敗，請稍後再試。");
         }

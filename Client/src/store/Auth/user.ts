@@ -4,6 +4,10 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 export interface User {
     username?: string;
     role: 'guest' | 'member' | 'admin';
+    phone?: string;
+    email?: string;
+    birthday?: string;
+    gender?: string;
 }
 
 interface UserState {
@@ -16,6 +20,10 @@ const initialState: UserState = {
     session: {
         username: '訪客',
         role: 'guest',
+        phone: '',
+        email: '',
+        birthday: '',
+        gender: '',
     },
     loading: false,
 
@@ -30,6 +38,9 @@ export const fetchUser = createAsyncThunk(
             if (!res.ok) throw new Error('Failed to fetch user');
             const resJson = await res.json();
             if (resJson.status === 'success') {
+                if (resJson?.data?.birthday) {
+                    resJson.data.birthday = resJson.data.birthday.split('T')[0];
+                }
                 return resJson.data; // 假設後端回傳 { userId, username, role }
             } else {
                 return initialState.session;

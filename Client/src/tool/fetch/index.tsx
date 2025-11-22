@@ -7,14 +7,15 @@ export async function apiFetch<T>(
     options: RequestInit = {}
 ): Promise<T> {
     const url = `${API_BASE}${endpoint}`;
-
+    const token = localStorage.getItem('token');
     try {
         const res = await fetch('/api' + url, {
+            ...options,
             headers: {
                 "Content-Type": "application/json",
+                'Authorization': `Bearer ${token}`,//加入 token 到請求頭
                 ...(options.headers || {}),
             },
-            ...options,
         });
 
         if (!res.ok) {

@@ -8,7 +8,7 @@ import type { ApiResponseRegister } from "@type/api";
 import Sweetalert from '@components/sweetalert2';
 
 //redux
-import { useAppDispatch, useAppSelector } from '@hook/useStore';
+import { useAppDispatch } from '@hook/useStore';
 import { setUser } from "@store/Auth/user";
 
 // 型別定義
@@ -26,8 +26,7 @@ void unused;
 type FocusedField = 'address' | 'password' | '';
 
 export default () => {
-    const currentUser = useAppSelector((state) => state.user.session);
-    console.log(currentUser);
+    // const currentUser = useAppSelector((state) => state.user.session);
 
     const { callApi } = useApi<ApiResponseRegister>();
     const dispatch = useAppDispatch();
@@ -69,7 +68,7 @@ export default () => {
                     username: result.data.username,
                     role: result.data.role,
                 }));
-                console.log(result.data);
+                localStorage.setItem('token', result.data.token);
                 await Sweetalert.showSuccess(result.message || '登入成功');
                 window.location.href = '/';
             } else if (result.status === 'fail') {

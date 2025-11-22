@@ -40,6 +40,7 @@ const ROUTER = {
     FAQ: "/FAQ",
     PRIVACY: "/Privacy",
     TERMS: "/Terms",
+    SHOP: "/Shop",
     NOTFOUND: "*",
 }
 

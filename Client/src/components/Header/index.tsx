@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingCart, User, MapPin, ChevronDown, Heart, Star, KeyRound, ClipboardPen } from 'lucide-react';
+import { ShoppingCart, User, MapPin, ChevronDown, Heart, Store, Star, KeyRound, ClipboardPen } from 'lucide-react';
 import { useAppSelector } from '@hook/useStore';
 
 import { Link } from "react-router-dom";
@@ -75,20 +75,24 @@ export default function Header() {
                     {/* Right Actions */}
                     {currentUser?.role === 'member' ?
                         <div className="flex items-center gap-3">
-                            {/* Favorites */}
-                            <button className="hidden md:flex p-2 hover:bg-gray-100 rounded-full relative">
-                                <Heart className="w-6 h-6 text-gray-600" />
-                            </button>
+                            {/* 商店 */}
+                            <Link to={ROUTER.SHOP}>
+                                <button className=" md:flex p-2 hover:bg-gray-100 rounded-full relative">
+                                    <Store className="w-6 h-6 text-gray-600" />
+                                </button>
+                            </Link>
 
                             {/* Cart */}
-                            <button className="p-2 hover:bg-gray-100 rounded-full relative">
-                                <ShoppingCart className="w-6 h-6 text-gray-600" />
-                                {cartCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </button>
+                            <Link to={ROUTER.CART}>
+                                <button className="p-2 hover:bg-gray-100 rounded-full relative">
+                                    <ShoppingCart className="w-6 h-6 text-gray-600" />
+                                    {cartCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                            {cartCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </Link>
 
                             {/* User Menu */}
                             <div className="relative">

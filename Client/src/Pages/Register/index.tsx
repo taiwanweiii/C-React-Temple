@@ -3,7 +3,7 @@ import { PhoneCall, Cake, Eye, EyeOff, ArrowRight, User, Mail, Lock, Check } fro
 import { useApi } from "@hook/useApi";
 
 //function 
-import ColorPickerIndex from '@pages/ColorPicker';
+import ColorPickerIndex from '@components/ColorPicker';
 import useColorPicker from '@hook/useColorPicker';
 
 //components
@@ -84,8 +84,9 @@ const Resgister: React.FC = () => {
         }
 
         // setIsLoading(true);
+
         try {
-            const result = await callApi('/api/user/Register', {
+            const result = await callApi('/user/Register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -491,7 +492,7 @@ const Resgister: React.FC = () => {
                                         '--tw-ring-color': primaryColor,
                                     } as React.CSSProperties
                                 }
-                            />
+                            />asd
                             <span>我希望接收產品更新和促銷資訊（可選）</span>
                         </label>
                     </div>

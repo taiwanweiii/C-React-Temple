@@ -6,6 +6,8 @@ import Home from '@pages/Home/Index';
 import Login from '@pages/Login';
 import Register from '@pages/Register';
 import UserProfile from '@pages/UserProfile/UserProfile';
+import Shop from '@pages/Shop/Shop';
+import Cart from '@pages/Cart/Cart';
 import Loading from '@pages/Loading/Loading';
 
 import ScrollToTop from '@pages/ScrollToTop';
@@ -31,7 +33,6 @@ function App() {
         <>
             <BrowserRouter>
                 <ScrollToTop />
-
                 <Routes>
                     <Route path="/" element={
                         <MainLayout>
@@ -57,7 +58,16 @@ function App() {
                             <Register />
                         </MainLayout>
                     } />
-
+                    <Route path="/shop" element={
+                        <MainLayout>
+                            <Shop />
+                        </MainLayout>
+                    } />
+                    <Route path="/cart" element={
+                        <MainLayout>
+                            <Cart />
+                        </MainLayout>
+                    } />
                     {/* <Route path="/about" element={<About />} /> */}
                     {/* 其他未匹配到的路由 */}
                     {/* <Route path="*" element={<NotFound />} /> */}
