@@ -32,4 +32,9 @@ export default defineConfig({
             },
         }
     },
+    build: {
+        outDir: '../Server/wwwroot',
+        emptyOutDir: true // build 前清空資料夾
+
+    }
 });
