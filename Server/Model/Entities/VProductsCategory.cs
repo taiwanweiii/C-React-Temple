@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Server.Model.Entities
 {
+    [Table("v_products_category")] // 指定資料表名稱
     public class V_products_categoryDB
     {
         public int Id { get; set; }
